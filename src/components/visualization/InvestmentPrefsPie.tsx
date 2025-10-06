@@ -12,8 +12,8 @@ export default function InvestmentPrefsPie({ height = 200, donut = false }: Inve
 
   const parts = useMemo(() => {
     const groups = d3.group(displayData, (d) => d.investmentExperience);
-    const ordered = ['None', 'Beginner', 'Intermediate', 'Advanced'];
-    return ordered.map((k) => ({ key: k, value: (groups.get(k) || []).length })).filter((d) => d.value > 0);
+    const ordered = ['None', 'Beginner', 'Intermediate', 'Advanced'] as const;
+    return ordered.map((k) => ({ key: k as string, value: (groups.get(k) || []).length })).filter((d) => d.value > 0);
   }, [displayData]);
 
   useEffect(() => {
@@ -41,9 +41,11 @@ export default function InvestmentPrefsPie({ height = 200, donut = false }: Inve
         return (t) => arc({ ...d, endAngle: i(t) } as any) as string;
       });
 
-    const labelArc = d3.arc().innerRadius(radius * (donut ? 0.85 : 0.7)).outerRadius(radius * (donut ? 0.85 : 0.7));
+    const labelArc = d3.arc<d3.PieArcDatum<any>>()
+      .innerRadius(radius * (donut ? 0.85 : 0.7))
+      .outerRadius(radius * (donut ? 0.85 : 0.7));
     const labels = g.selectAll('text').data(pie(parts)).join('text')
-      .attr('transform', (d) => `translate(${labelArc.centroid(d)})`)
+      .attr('transform', (d) => `translate(${labelArc.centroid(d as any)})`)
       .attr('text-anchor', 'middle')
       .attr('class', 'text-[10px] fill-gray-800')
       .text((d) => d.data.key);

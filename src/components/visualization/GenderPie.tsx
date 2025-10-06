@@ -68,11 +68,11 @@ export default function GenderPie({ donut = false, height = 160 }: GenderPieProp
       });
 
     // Labels
-    const labelArc = d3.arc().innerRadius(radius * 0.72).outerRadius(radius * 0.72);
+    const labelArc = d3.arc<d3.PieArcDatum<any>>().innerRadius(radius * 0.72).outerRadius(radius * 0.72);
     const labels = g.selectAll('text')
       .data(pie(counts))
       .join('text')
-      .attr('transform', (d) => `translate(${labelArc.centroid(d)})`)
+      .attr('transform', (d) => `translate(${labelArc.centroid(d as any)})`)
       .attr('text-anchor', 'middle')
       .attr('class', 'text-xs fill-gray-700')
       .text((d) => `${String(d.data.key)} (${d.data.value})`)

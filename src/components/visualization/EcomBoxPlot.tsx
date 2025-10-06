@@ -11,7 +11,7 @@ export default function EcomBoxPlot({ height = 220 }: EcomBoxPlotProps) {
   const ref = useRef<SVGSVGElement | null>(null);
 
   const grouped = useMemo(() => {
-    const order = ['Never', 'Rarely', 'Monthly', 'Weekly', 'Daily'];
+    const order = ['Rare', 'Occasional', 'Frequent', 'Daily'] as const;
     const map = d3.group(displayData, (d) => d.ecommerceFrequency);
     const stats = order.map((k) => {
       const vals = (map.get(k) || []).map((d) => d.digitalEngagementScore).sort(d3.ascending);

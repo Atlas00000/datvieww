@@ -11,9 +11,9 @@ export default function CausesHorizontalBar({ height = 200 }: CausesHorizontalBa
   const ref = useRef<SVGSVGElement | null>(null);
 
   const data = useMemo(() => {
-    // Use communityInvolvement as proxy for social causes support intensity per region
+    // Use environmentalConsciousness as proxy for social causes support intensity
     const levels = ['Low', 'Medium', 'High', 'Very High'];
-    const byLevel = d3.rollup(displayData, (v) => v.length, (d) => d.communityInvolvement);
+    const byLevel = d3.rollup(displayData, (v) => v.length, (d) => d.environmentalConsciousness as string);
     const rows = levels.map((k) => ({ key: k, value: byLevel.get(k) ?? 0 }));
     return rows.sort((a, b) => b.value - a.value);
   }, [displayData]);

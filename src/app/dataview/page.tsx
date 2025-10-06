@@ -241,12 +241,9 @@ export default function DataView() {
 
   // Format cell value
   const formatCellValue = (value: any, type: string) => {
-    if (Array.isArray(value)) {
-      return value.join(', ');
-    }
-    if (type === 'number') {
-      return value.toLocaleString();
-    }
+    if (Array.isArray(value)) return value.join(', ');
+    if (value === null || value === undefined) return '';
+    if (type === 'number') return typeof value === 'number' ? value.toLocaleString() : String(value);
     return String(value);
   };
 

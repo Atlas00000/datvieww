@@ -14,7 +14,16 @@ export default function SavingsRateRadial({ height = 240 }: Props) {
   const counts = useMemo(() => {
     const cats = ['Low', 'Medium', 'High', 'Very High'] as const;
     const c = Object.fromEntries(cats.map((k) => [k, 0])) as Record<(typeof cats)[number], number>;
-    for (const d of displayData) c[d.savingsRate as (typeof cats)[number]] += 1;
+    for (const d of displayData) {
+      // Derive proxy savings rate: higher incomeLevel and lower priceSensitivity -> higher savings
+      const inc = d.incomeLevel; // Low | Medium | High
+      const ps = d.priceSensitivity; // Low | Medium | High | Very High
+      let score = 0;
+      score += inc === 'High' ? 2 : inc === 'Medium' ? 1 : 0;
+      score += ps === 'Low' ? 2 : ps === 'Medium' ? 1 : 0;
+      const bucket = score >= 3 ? 'Very High' : score === 2 ? 'High' : score === 1 ? 'Medium' : 'Low';
+      c[bucket as (typeof cats)[number]] += 1;
+    }
     return { cats: cats as unknown as string[], values: cats.map((k) => ({ k, v: c[k] })) };
   }, [displayData]);
 

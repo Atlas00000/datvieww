@@ -11,9 +11,9 @@ export default function FitnessPie({ height = 200 }: FitnessPieProps) {
   const ref = useRef<SVGSVGElement | null>(null);
 
   const parts = useMemo(() => {
-    const order = ['Sedentary', 'Light', 'Moderate', 'Active', 'Very Active'];
+    const order = ['Low', 'Medium', 'High'] as const;
     const map = d3.rollup(displayData, (v) => v.length, (d) => d.fitnessLevel);
-    return order.map((k) => ({ key: k, value: map.get(k) ?? 0 })).filter((d) => d.value > 0);
+    return order.map((k) => ({ key: k as string, value: map.get(k) ?? 0 })).filter((d) => d.value > 0);
   }, [displayData]);
 
   useEffect(() => {
@@ -42,9 +42,11 @@ export default function FitnessPie({ height = 200 }: FitnessPieProps) {
         return (t) => arc({ ...d, endAngle: i(t) } as any) as string;
       });
 
-    const labelArc = d3.arc().innerRadius(radius * 0.7).outerRadius(radius * 0.7);
+    const labelArc = d3.arc<d3.PieArcDatum<any>>()
+      .innerRadius(radius * 0.7)
+      .outerRadius(radius * 0.7);
     const labels = g.selectAll('text').data(pie(parts)).join('text')
-      .attr('transform', (d) => `translate(${labelArc.centroid(d)})`)
+      .attr('transform', (d) => `translate(${labelArc.centroid(d as any)})`)
       .attr('text-anchor', 'middle')
       .attr('class', 'text-[10px] fill-gray-800')
       .text((d) => d.data.key);

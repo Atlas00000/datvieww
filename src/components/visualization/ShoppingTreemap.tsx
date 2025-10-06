@@ -47,15 +47,15 @@ export default function ShoppingTreemap({ height = 240 }: ShoppingTreemapProps) 
     const nodes = svg
       .append('g')
       .selectAll('g')
-      .data(root.leaves())
+      .data((root.leaves() as unknown) as d3.HierarchyRectangularNode<any>[]) 
       .join('g')
-      .attr('transform', (d) => `translate(${d.x0},${d.y0})`);
+      .attr('transform', (d) => `translate(${(d as any).x0},${(d as any).y0})`);
 
     const rects = nodes
       .append('rect')
       .attr('rx', 10)
-      .attr('width', (d) => Math.max(0, d.x1 - d.x0))
-      .attr('height', (d) => Math.max(0, d.y1 - d.y0))
+      .attr('width', (d) => Math.max(0, (d as any).x1 - (d as any).x0))
+      .attr('height', (d) => Math.max(0, (d as any).y1 - (d as any).y0))
       .attr('fill', (d) => color(d.parent?.data.name || 'Online'))
       .attr('fill-opacity', 0.18)
       .attr('stroke', 'var(--color-primary)')

@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import AgeHistogram from '@/components/visualization/AgeHistogram';
 import AgeBoxPlot from '@/components/visualization/AgeBoxPlot';
 import GenderPie from '@/components/visualization/GenderPie';
@@ -311,7 +314,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <ShoppingTreemap height={260} />
             </div>
           </div>
@@ -323,7 +325,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <ShoppingSunburst height={280} />
             </div>
           </div>
@@ -335,7 +336,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <EcomBoxPlot height={260} />
             </div>
           </div>
@@ -347,7 +347,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <PriceCorrHeatmap height={260} />
             </div>
           </div>

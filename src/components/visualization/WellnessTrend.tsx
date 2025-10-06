@@ -21,7 +21,7 @@ export default function WellnessTrend({ height = 220 }: WellnessTrendProps) {
     const bucket = (age: number) => bins.findIndex((b) => age < b);
     const grouped = d3.group(displayData, (d) => bucket(d.age));
     const points = Array.from(grouped, ([key, rows]) => {
-      const score = d3.mean(rows, (r) => (hsMap[r.healthStatus] + sleepMap[r.sleepQuality] + stressMap[r.stressLevel] + fitMap[r.fitnessLevel]) / 4) || 0;
+      const score = d3.mean(rows, (r) => r.wellnessScore) || 0;
       const label = key === 0 ? '18-25' : key === 1 ? '26-35' : key === 2 ? '36-45' : key === 3 ? '46-55' : key === 4 ? '56-65' : '65+';
       return { x: label, y: score };
     });

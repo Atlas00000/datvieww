@@ -13,7 +13,7 @@ export default function RiskToleranceStacked({ height = 260 }: Props) {
 
   const dataset = useMemo(() => {
     const incomes = ['Low', 'Medium', 'High'] as const;
-    const risks = ['Conservative', 'Moderate', 'Aggressive', 'Very Aggressive'] as const;
+    const risks = ['Low', 'Medium', 'High', 'Very High'] as const;
     const rows = incomes.map((inc) => {
       const row: any = { income: inc };
       for (const r of risks) row[r] = 0;
@@ -22,7 +22,8 @@ export default function RiskToleranceStacked({ height = 260 }: Props) {
     const idx = new Map(incomes.map((i, k) => [i, k]));
     for (const d of displayData) {
       const r = rows[idx.get(d.incomeLevel as any)!];
-      r[d.riskTolerance as any] += 1;
+      const key = (d as any).riskTolerance ?? 'Medium';
+      r[key as any] += 1;
     }
     return { rows, incomes: incomes as unknown as string[], risks: risks as unknown as string[] };
   }, [displayData]);
@@ -66,9 +67,10 @@ export default function RiskToleranceStacked({ height = 260 }: Props) {
     const tipBg = tip.append('rect').attr('rx', 6).attr('fill', 'white').attr('stroke', '#e5e7eb');
     const tipText = tip.append('text').attr('class', 'text-[10px] fill-gray-800');
     const show = function (event: any, d: any) {
-        const [y0, y1] = d;
+        const [y0, y1] = d as [number, number];
         const i = (d as any).data.income;
-        const key = (d as any).dataKey || (this.parentNode as any).__data__.key;
+        const parent = (event.currentTarget as any).parentNode;
+        const key = (d as any).dataKey || (parent ? parent.__data__.key : '');
         const count = Math.round(y1 - y0);
         tipText.selectAll('tspan').remove();
         tipText.append('tspan').attr('x', 0).attr('dy', 0).text(`${key}`);

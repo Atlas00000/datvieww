@@ -11,9 +11,9 @@ export default function FitnessBar({ height = 200 }: FitnessBarProps) {
   const ref = useRef<SVGSVGElement | null>(null);
 
   const data = useMemo(() => {
-    const order = ['Sedentary', 'Light', 'Moderate', 'Active', 'Very Active'];
+    const order = ['Low', 'Medium', 'High'] as const;
     const map = d3.rollup(displayData, (v) => v.length, (d) => d.fitnessLevel);
-    return order.map((k) => ({ key: k, value: map.get(k) ?? 0 }));
+    return order.map((k) => ({ key: k as string, value: map.get(k) ?? 0 }));
   }, [displayData]);
 
   useEffect(() => {

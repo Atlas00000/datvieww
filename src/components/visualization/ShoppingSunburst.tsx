@@ -61,18 +61,18 @@ export default function ShoppingSunburst({ height = 260 }: ShoppingSunburstProps
     const nodes = svg
       .append('g')
       .selectAll('path')
-      .data(root.descendants().filter((d) => d.depth))
+      .data((root.descendants().filter((d) => d.depth) as unknown) as d3.HierarchyRectangularNode<any>[]) 
       .join('path')
       .attr('fill', (d) => (d.depth === 1 ? color(d.data.name) : color(d.parent?.data.name || 'Online')))
       .attr('fill-opacity', (d) => (d.depth === 1 ? 0.22 : 0.18))
-      .attr('d', (d) => arc({ ...d, x1: d.x0 } as any) as string)
+      .attr('d', (d) => arc({ ...(d as any), x1: (d as any).x0 } as any) as string)
       .attr('stroke', 'white')
       .attr('stroke-opacity', 0.6)
       .transition()
       .duration(800)
       .attrTween('d', function (d) {
-        const i = d3.interpolate(d.x0, d.x1);
-        return (t) => arc({ ...d, x1: i(t) } as any) as string;
+        const i = d3.interpolate((d as any).x0, (d as any).x1);
+        return (t) => arc({ ...(d as any), x1: i(t) } as any) as string;
       });
 
     // Labels for first ring
@@ -83,8 +83,9 @@ export default function ShoppingSunburst({ height = 260 }: ShoppingSunburstProps
       .join('text')
       .attr('class', 'text-xs fill-gray-800')
       .attr('transform', (d) => {
-        const x = ((d.x0 + d.x1) / 2) * (180 / Math.PI);
-        const y = (d.y0 + d.y1) / 2;
+        const node = d as any;
+        const x = ((node.x0 + node.x1) / 2) * (180 / Math.PI);
+        const y = (node.y0 + node.y1) / 2;
         return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
       })
       .attr('text-anchor', 'middle')

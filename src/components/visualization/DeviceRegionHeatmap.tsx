@@ -17,7 +17,7 @@ export default function DeviceRegionHeatmap({ height = 220 }: DeviceRegionHeatma
     for (const r of regions) map.set(r, { Desktop: 0, Mobile: 0, Tablet: 0 });
     for (const row of displayData) {
       const r = row.region;
-      const dev = row.primaryDevice as (typeof devices)[number];
+      const dev = row.device as (typeof devices)[number];
       map.get(r)![dev] += 1;
     }
     const matrix = regions.flatMap((r, i) =>

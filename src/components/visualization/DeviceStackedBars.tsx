@@ -19,7 +19,7 @@ export default function DeviceStackedBars({ height = 200 }: DeviceStackedBarsPro
       displayData,
       (v) => {
         const init: Record<(typeof devices)[number], number> = { Desktop: 0, Mobile: 0, Tablet: 0 };
-        for (const r of v) init[r.primaryDevice as (typeof devices)[number]] += 1;
+        for (const r of v) init[r.device as (typeof devices)[number]] += 1;
         return init;
       },
       (d) => d.region

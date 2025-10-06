@@ -11,12 +11,8 @@ export default function HealthScoreGauge({ height = 200 }: HealthScoreGaugeProps
   const ref = useRef<SVGSVGElement | null>(null);
 
   const score = useMemo(() => {
-    const hsMap: Record<string, number> = { Poor: 1, Fair: 2, Good: 3, Excellent: 4 };
-    const fitMap: Record<string, number> = { Sedentary: 1, Light: 2, Moderate: 3, Active: 4, 'Very Active': 5 };
-    const stressMap: Record<string, number> = { 'Very High': 1, High: 2, Medium: 3, Low: 4 };
-    const sleepMap: Record<string, number> = { Poor: 1, Fair: 2, Good: 3, Excellent: 4 };
-    const avg = d3.mean(displayData, (r) => (hsMap[r.healthStatus] + sleepMap[r.sleepQuality] + stressMap[r.stressLevel] + fitMap[r.fitnessLevel]) / 4) || 0;
-    return (avg / 4) * 100; // 0..100
+    const avg = d3.mean(displayData, (r) => r.healthScore) || 0;
+    return avg; // already 0..100
   }, [displayData]);
 
   useEffect(() => {

@@ -11,13 +11,13 @@ export default function EcommerceBar({ height = 200 }: EcommerceBarProps) {
   const ref = useRef<SVGSVGElement | null>(null);
 
   const data = useMemo(() => {
-    const order = ['Never', 'Rarely', 'Monthly', 'Weekly', 'Daily'];
+    const order = ['Rare', 'Occasional', 'Frequent', 'Daily'] as const;
     const map = d3.rollup(
       displayData,
       (v) => v.length,
       (d) => d.ecommerceFrequency
     );
-    return order.map((k) => ({ key: k, value: map.get(k) ?? 0 }));
+    return order.map((k) => ({ key: k as string, value: map.get(k) ?? 0 }));
   }, [displayData]);
 
   useEffect(() => {

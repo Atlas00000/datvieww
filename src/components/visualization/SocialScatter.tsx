@@ -11,11 +11,13 @@ export default function SocialScatter({ height = 200 }: SocialScatterProps) {
   const ref = useRef<SVGSVGElement | null>(null);
 
   const points = useMemo(() => {
-    // Map social media usage levels to numeric intensity and correlate with engagement score
-    const usageMap: Record<string, number> = { 'Low': 1, 'Medium': 2, 'High': 3, 'Very High': 4 };
+    // Use ecommerceFrequency as proxy for digital activity cadence
+    const freqMap: Record<'Rare' | 'Occasional' | 'Frequent' | 'Daily', number> = {
+      Rare: 1, Occasional: 2, Frequent: 3, Daily: 4,
+    };
     return displayData.map((d) => ({
-      x: d.digitalEngagementScore, // 1-100
-      y: usageMap[d.socialMediaUsage] ?? 2,
+      x: d.digitalEngagementScore,
+      y: freqMap[d.ecommerceFrequency as 'Rare' | 'Occasional' | 'Frequent' | 'Daily'] ?? 2,
       label: d.id,
     }));
   }, [displayData]);
@@ -58,7 +60,7 @@ export default function SocialScatter({ height = 200 }: SocialScatterProps) {
     const yAxis = d3
       .axisLeft(y)
       .ticks(4)
-      .tickFormat((v) => (v === 1 ? 'Low' : v === 2 ? 'Medium' : v === 3 ? 'High' : 'Very High') as any)
+      .tickFormat((v) => (v === 1 ? 'Rare' : v === 2 ? 'Occasional' : v === 3 ? 'Frequent' : 'Daily') as any)
       .tickSize(-innerW)
       .tickSizeOuter(0);
 
@@ -100,7 +102,7 @@ export default function SocialScatter({ height = 200 }: SocialScatterProps) {
         vy.attr('y1', best.py).attr('y2', best.py);
         focus.attr('cx', best.px).attr('cy', best.py);
         tipText.selectAll('tspan').remove();
-        const usageLabel = best.p.y === 1 ? 'Low' : best.p.y === 2 ? 'Medium' : best.p.y === 3 ? 'High' : 'Very High';
+        const usageLabel = best.p.y === 1 ? 'Rare' : best.p.y === 2 ? 'Occasional' : best.p.y === 3 ? 'Frequent' : 'Daily';
         tipText.append('tspan').attr('x', 0).attr('dy', 0).text(`Engagement: ${Math.round(best.p.x)}`);
         tipText.append('tspan').attr('x', 0).attr('dy', 12).text(`Usage: ${usageLabel}`);
         const bbox = (tipText.node() as SVGTextElement).getBBox();
