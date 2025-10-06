@@ -52,6 +52,10 @@ export default function Home() {
             <div className="hidden md:flex items-center gap-3">
               <a href="/dataview" className="btn-gradient text-white px-4 py-2 rounded-lg font-medium">Data View</a>
             </div>
+            {/* Mobile actions */}
+            <div className="flex md:hidden items-center gap-2">
+              <a href="/dataview" className="px-3 py-2 rounded-lg font-medium border border-black/10 text-gray-700 bg-white/70 backdrop-blur hover:text-gray-900 transition">Data View</a>
+            </div>
           </div>
         </div>
       </header>
