@@ -1,0 +1,53 @@
+# Node
+node_modules/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next/
+out/
+.turbo/
+.vercel/
+
+# Generic build outputs
+dist/
+build/
+
+# Env and local config
+.env*
+!.env.example
+
+# OS/Editor
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Coverage/Reports
+coverage/
+*.lcov
+
+# Misc caches
+.eslintcache
+.cache/
+
+# Logs
+logs/
+*.log
+lerna-debug.log*
+
+# Package manager caches (not lockfiles)
+.npm/
+.pnpm-store/
+
+# Other tool caches
+.vite/
+.parcel-cache/
+
+# Ensure source is always tracked
+!src/
+!src/**
+
