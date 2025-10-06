@@ -153,7 +153,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <SustainabilityStackedBars height={220} />
             </div>
           </div>
@@ -165,7 +164,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <CausesHorizontalBar height={220} />
             </div>
           </div>
@@ -177,7 +175,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2 grid place-items-center">
-              {/* @ts-expect-error client component */}
               <EnvAwarenessGauge height={220} />
             </div>
           </div>
@@ -205,7 +202,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <IncomeSpendingScatter height={240} />
             </div>
           </div>
@@ -217,8 +213,8 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2 grid grid-cols-2 gap-4">
-              <div className="grid place-items-center">{/* @ts-expect-error client component */}<InvestmentPrefsPie height={200} /></div>
-              <div className="grid place-items-center">{/* @ts-expect-error client component */}<InvestmentPrefsPie donut height={200} /></div>
+              <div className="grid place-items-center"><InvestmentPrefsPie height={200} /></div>
+              <div className="grid place-items-center"><InvestmentPrefsPie donut height={200} /></div>
             </div>
           </div>
         </div>
@@ -244,7 +240,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <FitnessBar height={220} />
             </div>
           </div>
@@ -256,7 +251,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2 grid place-items-center">
-              {/* @ts-expect-error client component */}
               <FitnessPie height={220} />
             </div>
           </div>
@@ -268,7 +262,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <SleepStressHeatmap height={240} />
             </div>
           </div>
@@ -280,7 +273,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <WellnessTrend height={240} />
             </div>
           </div>
@@ -292,7 +284,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2 grid place-items-center">
-              {/* @ts-expect-error client component */}
               <HealthScoreGauge height={220} />
             </div>
           </div>
@@ -384,7 +375,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <DeviceStackedBars height={220} />
             </div>
           </div>
@@ -396,7 +386,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <SocialScatter height={220} />
             </div>
           </div>
@@ -408,7 +397,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <EcommerceBar height={220} />
             </div>
           </div>
@@ -420,7 +408,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <DeviceRegionHeatmap height={240} />
             </div>
           </div>
@@ -432,7 +419,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <EngagementDensity height={240} />
             </div>
           </div>
@@ -461,7 +447,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-4">
-              {/* @ts-expect-error client component */}
               <AgeHistogram height={180} />
             </div>
           </div>
@@ -473,7 +458,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
                   </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <AgeBoxPlot height={200} />
             </div>
                   </div>
@@ -485,7 +469,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
               </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <GenderPie height={180} />
             </div>
                 </div>
@@ -497,9 +480,8 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
                 </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <GenderPie donut height={180} />
-                </div>
+            </div>
                 </div>
 
           {/* Geographic Distribution: Map (stylized) */}
@@ -520,7 +502,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <RegionBars height={200} />
             </div>
           </div>
@@ -532,9 +513,8 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <EducationBars height={200} />
-        </div>
+            </div>
           </div>
 
           {/* Education Levels: Stacked bar */}
@@ -564,7 +544,6 @@ export default function Home() {
               <span className="text-xs text-gray-500">Live</span>
             </div>
             <div className="mt-2">
-              {/* @ts-expect-error client component */}
               <IncomeHistogramViolin height={200} />
             </div>
           </div>
