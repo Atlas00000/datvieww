@@ -78,13 +78,22 @@ export default function EcommerceBar({ height = 200 }: EcommerceBarProps) {
       .call((s) => s.selectAll('line').attr('class', 'stroke-gray-100'))
       .call((s) => s.select('.domain').attr('class', 'stroke-gray-300'));
 
-    // Tooltip with percent share
+    // Crosshair line
+    const cx = g.append('line')
+      .attr('y1', 0)
+      .attr('y2', innerH)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-opacity', 0.25)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+
+    // Enhanced tooltip with data breakdown
     const total = d3.sum(data, (d) => d.value) || 1;
     const tip = g.append('g').style('display', 'none');
-    const tipBg = tip.append('rect').attr('rx', 6).attr('fill', 'white').attr('stroke', '#e5e7eb');
-    const tipText = tip.append('text').attr('class', 'text-[10px] fill-gray-800');
-    g.selectAll('rect.hover')
-      .data([]);
+    const tipBg = tip.append('rect').attr('rx', 8).attr('fill', 'white').attr('stroke', '#e5e7eb').attr('stroke-width', 1);
+    const tipTitle = tip.append('text').attr('class', 'text-sm fill-gray-900 font-bold').attr('x', 0).attr('y', 0);
+    const tipContent = tip.append('g').attr('transform', 'translate(0, 20)');
+
     g.selectAll('rect.hit')
       .data(data)
       .join('rect')
@@ -94,18 +103,53 @@ export default function EcommerceBar({ height = 200 }: EcommerceBarProps) {
       .attr('width', x.bandwidth())
       .attr('height', innerH)
       .attr('fill', 'transparent')
-      .on('mouseenter', () => tip.style('display', null))
-      .on('mouseleave', () => tip.style('display', 'none'))
+      .on('mouseenter', () => {
+        cx.style('display', null);
+        tip.style('display', null);
+      })
+      .on('mouseleave', () => {
+        cx.style('display', 'none');
+        tip.style('display', 'none');
+      })
       .on('mousemove', function (event, d) {
+        const cxPos = (x(d.key) as number) + x.bandwidth() / 2;
+        cx.attr('x1', cxPos).attr('x2', cxPos);
+
         const val = d.value;
-        const pct = Math.round((val / total) * 100);
-        tipText.selectAll('tspan').remove();
-        tipText.append('tspan').attr('x', 0).attr('dy', 0).text(d.key);
-        tipText.append('tspan').attr('x', 0).attr('dy', 12).text(`Count: ${val} (${pct}%)`);
-        const bbox = (tipText.node() as SVGTextElement).getBBox();
-        tipBg.attr('width', bbox.width + 16).attr('height', bbox.height + 12).attr('x', -8).attr('y', -bbox.height);
-        const [mx, my] = d3.pointer(event);
-        tip.attr('transform', `translate(${Math.min(innerW - (bbox.width + 20), mx + 8)},${Math.max(12, my - 10)})`);
+        const pct = (val / total) * 100;
+
+        // Update tooltip with detailed breakdown
+        tipTitle.text('Ecommerce Frequency Distribution');
+        tipContent.selectAll('*').remove();
+        
+        let yOffset = 0;
+        data.forEach((item) => {
+          const itemPct = (item.value / total) * 100;
+          const row = tipContent.append('g').attr('transform', `translate(0, ${yOffset})`);
+          row.append('text')
+            .attr('x', 0)
+            .attr('y', 10)
+            .attr('class', 'text-xs fill-gray-700')
+            .text(`${item.key}: ${item.value} (${itemPct.toFixed(1)}%)`);
+          yOffset += 16;
+        });
+
+        const bbox = tipContent.node()?.getBBox();
+        if (bbox) {
+          const tipWidth = Math.max(bbox.width + 20, 200);
+          const tipHeight = bbox.height + 40;
+          tipBg
+            .attr('width', tipWidth)
+            .attr('height', tipHeight)
+            .attr('x', -tipWidth / 2)
+            .attr('y', -tipHeight - 10);
+          
+          tipTitle.attr('x', -tipWidth / 2 + 10).attr('y', 14);
+          tipContent.attr('transform', `translate(${-tipWidth / 2 + 10}, 20)`);
+          
+          const [mx, my] = d3.pointer(event);
+          tip.attr('transform', `translate(${Math.min(innerW - (tipWidth + 20), cxPos + 10)},${Math.max(12, my - tipHeight - 20)})`);
+        }
       });
   }, [data, height]);
 

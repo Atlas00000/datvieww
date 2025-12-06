@@ -15,6 +15,23 @@ export default function HealthScoreGauge({ height = 200 }: HealthScoreGaugeProps
     return avg; // already 0..100
   }, [displayData]);
 
+  const breakdown = useMemo(() => {
+    const ranges = [
+      { label: 'Poor (0-40)', min: 0, max: 40 },
+      { label: 'Fair (41-60)', min: 41, max: 60 },
+      { label: 'Good (61-80)', min: 61, max: 80 },
+      { label: 'Excellent (81-100)', min: 81, max: 100 },
+    ];
+    return ranges.map((range) => {
+      const count = displayData.filter((d) => d.healthScore >= range.min && d.healthScore <= range.max).length;
+      return {
+        label: range.label,
+        count,
+        percentage: (count / displayData.length) * 100,
+      };
+    });
+  }, [displayData]);
+
   useEffect(() => {
     if (!ref.current) return;
     const width = ref.current.clientWidth || 360;
@@ -58,7 +75,86 @@ export default function HealthScoreGauge({ height = 200 }: HealthScoreGaugeProps
       const y2 = Math.sin(a) * (radius * 0.7 - 8);
       tickG.append('line').attr('x1', x1).attr('y1', y1).attr('x2', x2).attr('y2', y2).attr('stroke', '#e5e7eb');
     }
-  }, [score, height]);
+
+    // Interactive overlay with crosshair and tooltip
+    const tip = svg.append('g').style('display', 'none');
+    const tipBg = tip.append('rect').attr('rx', 8).attr('fill', 'white').attr('stroke', '#e5e7eb').attr('stroke-width', 1);
+    const tipTitle = tip.append('text').attr('class', 'text-sm fill-gray-900 font-bold').attr('x', 0).attr('y', 0);
+    const tipContent = tip.append('g').attr('transform', 'translate(0, 20)');
+
+    // Crosshair indicator (radial line from center)
+    const crosshair = svg.append('line')
+      .attr('x1', 0)
+      .attr('y1', 0)
+      .attr('x2', 0)
+      .attr('y2', -radius * 0.7)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-width', 2)
+      .attr('stroke-opacity', 0.6)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+
+    // Hover overlay
+    const overlay = svg.append('circle')
+      .attr('r', radius)
+      .attr('fill', 'transparent')
+      .attr('cursor', 'pointer')
+      .on('mouseenter', () => {
+        crosshair.style('display', null);
+        tip.style('display', null);
+      })
+      .on('mouseleave', () => {
+        crosshair.style('display', 'none');
+        tip.style('display', 'none');
+      })
+      .on('mousemove', (event) => {
+        const [mx, my] = d3.pointer(event, svg.node());
+        const angle = Math.atan2(my, mx);
+        
+        // Update crosshair position
+        const crosshairLength = radius * 0.7;
+        crosshair
+          .attr('x2', Math.cos(angle) * crosshairLength)
+          .attr('y2', Math.sin(angle) * crosshairLength);
+
+        // Update tooltip with breakdown data
+        tipTitle.text('Health Score Distribution');
+        tipContent.selectAll('*').remove();
+        
+        let yOffset = 0;
+        breakdown.forEach((item, idx) => {
+          const row = tipContent.append('g').attr('transform', `translate(0, ${yOffset})`);
+          row.append('rect')
+            .attr('width', 12)
+            .attr('height', 12)
+            .attr('fill', idx === 0 ? '#fca5a5' : idx === 1 ? '#fde047' : idx === 2 ? '#86efac' : '#67e8f9')
+            .attr('rx', 2);
+          row.append('text')
+            .attr('x', 16)
+            .attr('y', 10)
+            .attr('class', 'text-xs fill-gray-700')
+            .text(`${item.label}: ${item.count} (${item.percentage.toFixed(1)}%)`);
+          yOffset += 16;
+        });
+
+        const bbox = tipContent.node()?.getBBox();
+        if (bbox) {
+          const tipWidth = Math.max(bbox.width + 20, 200);
+          const tipHeight = bbox.height + 40;
+          tipBg
+            .attr('width', tipWidth)
+            .attr('height', tipHeight)
+            .attr('x', -tipWidth / 2)
+            .attr('y', -tipHeight - 10);
+          
+          tipTitle.attr('x', -tipWidth / 2 + 10).attr('y', 14);
+          tipContent.attr('transform', `translate(${-tipWidth / 2 + 10}, 20)`);
+          
+          // Position tooltip above gauge
+          tip.attr('transform', `translate(${mx}, ${my - radius - tipHeight - 20})`);
+        }
+      });
+  }, [score, height, breakdown]);
 
   return <svg ref={ref} className="w-full" height={height} />;
 }

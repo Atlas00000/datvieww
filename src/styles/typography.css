@@ -1,0 +1,103 @@
+/* Typography System */
+  /* Font Families */
+  .font-display {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
+
+  /* Hero Typography */
+  .text-hero {
+    font-size: 4rem; /* 64px */
+    line-height: 1.125; /* 72px */
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  @media (min-width: 768px) {
+    .text-hero {
+      font-size: 4.5rem; /* 72px */
+      line-height: 1.1;
+    }
+  }
+
+  /* Heading Scale */
+  .text-h1 {
+    font-size: 3rem; /* 48px */
+    line-height: 1.167; /* 56px */
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .text-h2 {
+    font-size: 2.25rem; /* 36px */
+    line-height: 1.222; /* 44px */
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .text-h3 {
+    font-size: 1.5rem; /* 24px */
+    line-height: 1.333; /* 32px */
+    font-weight: 600;
+  }
+
+  /* Body Text */
+  .text-body {
+    font-size: 1rem; /* 16px */
+    line-height: 1.5; /* 24px */
+    font-weight: 400;
+  }
+
+  .text-small {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.429; /* 20px */
+    font-weight: 400;
+  }
+
+  .text-caption {
+    font-size: 0.75rem; /* 12px */
+    line-height: 1.333; /* 16px */
+    font-weight: 400;
+  }
+
+  /* Text Colors */
+  .text-primary {
+    color: var(--color-text-primary);
+  }
+
+  .text-secondary {
+    color: var(--color-text-secondary);
+  }
+
+  .text-tertiary {
+    color: var(--color-text-tertiary);
+  }
+
+  /* Font Weights */
+  .font-light {
+    font-weight: 300;
+  }
+
+  .font-normal {
+    font-weight: 400;
+  }
+
+  .font-medium {
+    font-weight: 500;
+  }
+
+  .font-semibold {
+    font-weight: 600;
+  }
+
+  .font-bold {
+    font-weight: 700;
+  }
+
+  .font-extrabold {
+    font-weight: 800;
+  }
+

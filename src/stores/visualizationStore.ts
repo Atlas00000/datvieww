@@ -1,3 +1,5 @@
+'use client';
+
 import { create } from 'zustand';
 import { generateMockUsers } from '@/data/mockData';
 
@@ -10,19 +12,22 @@ type VisualizationState = {
   reset: () => void;
 };
 
+// Lazy initialization - only generate data when store is first accessed on client
+let initialData: User[] | null = null;
+
+const getInitialData = () => {
+  if (initialData === null) {
+    initialData = generateMockUsers(800);
+  }
+  return initialData;
+};
+
 export const useVisualizationStore = create<VisualizationState>((set, get) => ({
-  rawData: generateMockUsers(800),
-  displayData: [],
+  rawData: getInitialData(),
+  displayData: getInitialData(),
   setDisplayData: (next) =>
     set((state) => ({ displayData: typeof next === 'function' ? (next as any)(state.displayData) : next })),
   reset: () => set({ displayData: get().rawData }),
 }));
-
-// Initialize displayData on first import
-// This ensures charts have data without an explicit effect on every page
-const init = useVisualizationStore.getState();
-if (init.displayData.length === 0) {
-  useVisualizationStore.setState({ displayData: init.rawData });
-}
 
 

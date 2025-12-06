@@ -73,21 +73,89 @@ export default function DeviceRegionHeatmap({ height = 220 }: DeviceRegionHeatma
       .attr('text-anchor', 'middle')
       .text((d: any) => d.value);
 
-    // Hover outline + tooltip
+    // Crosshair lines
+    const vx = g.append('line')
+      .attr('y1', 0)
+      .attr('y2', innerH)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-opacity', 0.25)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+    const vy = g.append('line')
+      .attr('x1', 0)
+      .attr('x2', innerW)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-opacity', 0.25)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+
+    // Enhanced tooltip with data breakdown
     const tip = g.append('g').style('display', 'none');
-    const tipBg = tip.append('rect').attr('rx', 6).attr('fill', 'white').attr('stroke', '#e5e7eb');
-    const tipText = tip.append('text').attr('class', 'text-[10px] fill-gray-800');
+    const tipBg = tip.append('rect').attr('rx', 8).attr('fill', 'white').attr('stroke', '#e5e7eb').attr('stroke-width', 1);
+    const tipTitle = tip.append('text').attr('class', 'text-sm fill-gray-900 font-bold').attr('x', 0).attr('y', 0);
+    const tipContent = tip.append('g').attr('transform', 'translate(0, 20)');
+
+    const total = d3.sum(matrix, (m: any) => m.value) || 1;
+
     g.selectAll('rect')
-      .on('mouseenter', function () { d3.select(this).attr('stroke', 'var(--color-primary)').attr('stroke-width', 1.5); tip.style('display', null); })
-      .on('mouseleave', function () { d3.select(this).attr('stroke', 'none'); tip.style('display', 'none'); })
+      .on('mouseenter', function () {
+        d3.select(this).attr('stroke', 'var(--color-primary)').attr('stroke-width', 1.5);
+        vx.style('display', null);
+        vy.style('display', null);
+        tip.style('display', null);
+      })
+      .on('mouseleave', function () {
+        d3.select(this).attr('stroke', 'none');
+        vx.style('display', 'none');
+        vy.style('display', 'none');
+        tip.style('display', 'none');
+      })
       .on('mousemove', function (event, d: any) {
-        tipText.selectAll('tspan').remove();
-        tipText.append('tspan').attr('x', 0).attr('dy', 0).text(`${d.d} × ${d.r}`);
-        tipText.append('tspan').attr('x', 0).attr('dy', 12).text(`Count: ${d.value}`);
-        const bbox = (tipText.node() as SVGTextElement).getBBox();
-        tipBg.attr('width', bbox.width + 16).attr('height', bbox.height + 12).attr('x', -8).attr('y', -bbox.height);
-        const [mx, my] = d3.pointer(event);
-        tip.attr('transform', `translate(${Math.min(innerW - (bbox.width + 20), mx + 8)},${Math.max(12, my - 10)})`);
+        // Update crosshair position
+        const cellX = (x(d.d) as number) + x.bandwidth() / 2;
+        const cellY = (y(d.r) as number) + y.bandwidth() / 2;
+        vx.attr('x1', cellX).attr('x2', cellX);
+        vy.attr('y1', cellY).attr('y2', cellY);
+
+        // Update tooltip with detailed breakdown
+        const pct = (d.value / total) * 100;
+        tipTitle.text('Device × Region Distribution');
+        tipContent.selectAll('*').remove();
+        
+        let yOffset = 0;
+        const breakdown = [
+          { label: 'Device', value: d.d },
+          { label: 'Region', value: d.r },
+          { label: 'Count', value: d.value.toString() },
+          { label: 'Percentage', value: `${pct.toFixed(1)}%` },
+        ];
+
+        breakdown.forEach((item) => {
+          const row = tipContent.append('g').attr('transform', `translate(0, ${yOffset})`);
+          row.append('text')
+            .attr('x', 0)
+            .attr('y', 10)
+            .attr('class', 'text-xs fill-gray-700')
+            .text(`${item.label}: ${item.value}`);
+          yOffset += 16;
+        });
+
+        const bbox = tipContent.node()?.getBBox();
+        if (bbox) {
+          const tipWidth = Math.max(bbox.width + 20, 200);
+          const tipHeight = bbox.height + 40;
+          tipBg
+            .attr('width', tipWidth)
+            .attr('height', tipHeight)
+            .attr('x', -tipWidth / 2)
+            .attr('y', -tipHeight - 10);
+          
+          tipTitle.attr('x', -tipWidth / 2 + 10).attr('y', 14);
+          tipContent.attr('transform', `translate(${-tipWidth / 2 + 10}, 20)`);
+          
+          const [mx, my] = d3.pointer(event);
+          tip.attr('transform', `translate(${Math.min(innerW - (tipWidth + 20), mx + 8)},${Math.max(12, my - tipHeight - 20)})`);
+        }
       });
 
     // Axes labels

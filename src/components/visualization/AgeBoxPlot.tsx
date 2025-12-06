@@ -85,26 +85,79 @@ export default function AgeBoxPlot({ height = 180 }: AgeBoxPlotProps) {
       .call((s) => s.selectAll('line').attr('class', 'stroke-gray-200'))
       .call((s) => s.select('.domain').attr('class', 'stroke-gray-300'));
 
-    // Interactive handle + tooltip
+    // Crosshair line
+    const vx = g.append('line')
+      .attr('y1', 0)
+      .attr('y2', innerH)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-opacity', 0.25)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+
+    // Interactive handle + enhanced tooltip
     const handle = g.append('circle').attr('r', 5).attr('fill', 'var(--color-primary)').style('display', 'none');
     const tip = g.append('g').style('display', 'none');
-    const tipBg = tip.append('rect').attr('rx', 6).attr('fill', 'white').attr('stroke', '#e5e7eb');
-    const tipText = tip.append('text').attr('class', 'text-[10px] fill-gray-800');
+    const tipBg = tip.append('rect').attr('rx', 8).attr('fill', 'white').attr('stroke', '#e5e7eb').attr('stroke-width', 1);
+    const tipTitle = tip.append('text').attr('class', 'text-sm fill-gray-900 font-bold').attr('x', 0).attr('y', 0);
+    const tipContent = tip.append('g').attr('transform', 'translate(0, 20)');
+
     g.append('rect').attr('x', 0).attr('y', centerY - boxH / 2 - 10).attr('width', innerW).attr('height', boxH + 20).attr('fill', 'transparent')
-      .on('mouseenter', () => { handle.style('display', null); tip.style('display', null); })
-      .on('mouseleave', () => { handle.style('display', 'none'); tip.style('display', 'none'); })
+      .on('mouseenter', () => {
+        vx.style('display', null);
+        handle.style('display', null);
+        tip.style('display', null);
+      })
+      .on('mouseleave', () => {
+        vx.style('display', 'none');
+        handle.style('display', 'none');
+        tip.style('display', 'none');
+      })
       .on('mousemove', (event) => {
         const [mx] = d3.pointer(event);
         const age = Math.round(x.invert(mx));
+        vx.attr('x1', mx).attr('x2', mx);
         handle.attr('cx', mx).attr('cy', centerY);
-        tipText.selectAll('tspan').remove();
-        tipText.append('tspan').attr('x', 0).attr('dy', 0).text(`Age: ${age}`);
-        tipText.append('tspan').attr('x', 0).attr('dy', 12).text(`Q1: ${Math.round(stats.q1)}  Median: ${Math.round(stats.q2)}`);
-        tipText.append('tspan').attr('x', 0).attr('dy', 12).text(`Q3: ${Math.round(stats.q3)}`);
-        const bbox = (tipText.node() as SVGTextElement).getBBox();
-        tipBg.attr('width', bbox.width + 16).attr('height', bbox.height + 12).attr('x', -8).attr('y', -bbox.height);
-        const tx = Math.min(innerW - (bbox.width + 20), mx + 10);
-        tip.attr('transform', `translate(${tx},${centerY - boxH / 2 - 6})`);
+
+        // Update tooltip with detailed breakdown
+        tipTitle.text('Age Distribution Statistics');
+        tipContent.selectAll('*').remove();
+        
+        let yOffset = 0;
+        const breakdown = [
+          { label: 'Min', value: Math.round(stats.min).toString() },
+          { label: 'Q1 (25%)', value: Math.round(stats.q1).toString() },
+          { label: 'Median (50%)', value: Math.round(stats.q2).toString() },
+          { label: 'Q3 (75%)', value: Math.round(stats.q3).toString() },
+          { label: 'Max', value: Math.round(stats.max).toString() },
+          { label: 'IQR', value: Math.round(stats.q3 - stats.q1).toString() },
+        ];
+
+        breakdown.forEach((item) => {
+          const row = tipContent.append('g').attr('transform', `translate(0, ${yOffset})`);
+          row.append('text')
+            .attr('x', 0)
+            .attr('y', 10)
+            .attr('class', 'text-xs fill-gray-700')
+            .text(`${item.label}: ${item.value}`);
+          yOffset += 16;
+        });
+
+        const bbox = tipContent.node()?.getBBox();
+        if (bbox) {
+          const tipWidth = Math.max(bbox.width + 20, 200);
+          const tipHeight = bbox.height + 40;
+          tipBg
+            .attr('width', tipWidth)
+            .attr('height', tipHeight)
+            .attr('x', -tipWidth / 2)
+            .attr('y', -tipHeight - 10);
+          
+          tipTitle.attr('x', -tipWidth / 2 + 10).attr('y', 14);
+          tipContent.attr('transform', `translate(${-tipWidth / 2 + 10}, 20)`);
+          
+          const tx = Math.min(innerW - (tipWidth + 20), mx + 10);
+          tip.attr('transform', `translate(${tx},${centerY - boxH / 2 - tipHeight - 20})`);
+        }
       });
   }, [stats, height]);
 

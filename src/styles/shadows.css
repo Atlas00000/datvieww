@@ -1,0 +1,59 @@
+/* Shadow System for Depth & Elevation */
+  /* Subtle Shadow */
+  .shadow-subtle {
+    box-shadow: var(--shadow-subtle);
+  }
+
+  /* Medium Shadow */
+  .shadow-medium {
+    box-shadow: var(--shadow-medium);
+  }
+
+  /* Strong Shadow */
+  .shadow-strong {
+    box-shadow: var(--shadow-strong);
+  }
+
+  /* Colored Glows */
+  .shadow-glow-primary {
+    box-shadow: var(--shadow-glow-primary);
+  }
+
+  .shadow-glow-accent {
+    box-shadow: var(--shadow-glow-accent);
+  }
+
+  /* Hover Shadow States */
+  .shadow-hover {
+    transition: box-shadow var(--duration-fast) var(--ease-standard);
+  }
+
+  .shadow-hover:hover {
+    box-shadow: var(--shadow-medium);
+  }
+
+  .shadow-hover-strong:hover {
+    box-shadow: var(--shadow-strong);
+  }
+
+  .shadow-hover-glow:hover {
+    box-shadow: var(--shadow-glow-primary);
+  }
+
+  /* Elevation Levels */
+  .elevation-1 {
+    box-shadow: var(--shadow-subtle);
+  }
+
+  .elevation-2 {
+    box-shadow: var(--shadow-medium);
+  }
+
+  .elevation-3 {
+    box-shadow: var(--shadow-strong);
+  }
+
+  .elevation-4 {
+    box-shadow: var(--shadow-strong), var(--shadow-glow-primary);
+  }
+

@@ -51,23 +51,109 @@ export default function FitnessPie({ height = 200 }: FitnessPieProps) {
       .attr('class', 'text-[10px] fill-gray-800')
       .text((d) => d.data.key);
 
-    g.selectAll('path')
-      .on('mouseenter', function () { d3.select(this).attr('opacity', 1); })
-      .on('mouseleave', function () { d3.select(this).attr('opacity', 0.9); });
+    // Interactive tooltip with data breakdown
+    const tip = svg.append('g').style('display', 'none');
+    const tipBg = tip.append('rect').attr('rx', 8).attr('fill', 'white').attr('stroke', '#e5e7eb').attr('stroke-width', 1);
+    const tipTitle = tip.append('text').attr('class', 'text-sm fill-gray-900 font-bold').attr('x', 0).attr('y', 0);
+    const tipContent = tip.append('g').attr('transform', 'translate(0, 20)');
+
+    // Crosshair indicator (radial line from center)
+    const crosshair = svg.append('line')
+      .attr('x1', 0)
+      .attr('y1', 0)
+      .attr('x2', 0)
+      .attr('y2', -radius)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-width', 2)
+      .attr('stroke-opacity', 0.6)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+
+    // Calculate percentages for breakdown
+    const total = d3.sum(parts, (d) => d.value) || 1;
+    const breakdown = parts.map((d) => ({
+      key: d.key,
+      value: d.value,
+      percentage: (d.value / total) * 100,
+      color: color(d.key),
+    }));
 
     // Center callout updates on hover
-    const total = d3.sum(parts, (d) => d.value) || 1;
     const center = svg.append('g').attr('transform', 'translate(0,0)');
     const centerBg = center.append('circle').attr('r', 24).attr('fill', 'white').attr('stroke', '#e5e7eb');
     const centerText = center.append('text').attr('class', 'text-[11px] fill-gray-800 font-medium').attr('text-anchor', 'middle').attr('y', 4).text('Fitness');
 
+    // Enhanced hover with crosshair and tooltip
     g.selectAll('path')
-      .on('mousemove', function (_event, d: any) {
+      .on('mouseenter', function (event, d: any) {
+        d3.select(this).attr('opacity', 1).attr('stroke', 'var(--color-primary)').attr('stroke-width', 2);
+        
+        // Show crosshair
+        const centroid = arc.centroid(d as any);
+        const angle = Math.atan2(centroid[1], centroid[0]);
+        const crosshairLength = radius;
+        crosshair
+          .attr('x2', Math.cos(angle) * crosshairLength)
+          .attr('y2', Math.sin(angle) * crosshairLength)
+          .style('display', null);
+
+        // Update center text
         const pct = Math.round((d.data.value / total) * 100);
         centerText.text(`${d.data.key} ${pct}%`);
+
+        // Show tooltip with full breakdown
+        tipTitle.text('Fitness Level Breakdown');
+        tipContent.selectAll('*').remove();
+        
+        let yOffset = 0;
+        breakdown.forEach((item) => {
+          const row = tipContent.append('g').attr('transform', `translate(0, ${yOffset})`);
+          row.append('rect')
+            .attr('width', 12)
+            .attr('height', 12)
+            .attr('fill', item.color)
+            .attr('rx', 2);
+          row.append('text')
+            .attr('x', 16)
+            .attr('y', 10)
+            .attr('class', 'text-xs fill-gray-700')
+            .text(`${item.key}: ${item.value} (${item.percentage.toFixed(1)}%)`);
+          yOffset += 16;
+        });
+
+        const bbox = tipContent.node()?.getBBox();
+        if (bbox) {
+          const tipWidth = Math.max(bbox.width + 20, 200);
+          const tipHeight = bbox.height + 40;
+          tipBg
+            .attr('width', tipWidth)
+            .attr('height', tipHeight)
+            .attr('x', -tipWidth / 2)
+            .attr('y', -tipHeight - 10);
+          
+          tipTitle.attr('x', -tipWidth / 2 + 10).attr('y', 14);
+          tipContent.attr('transform', `translate(${-tipWidth / 2 + 10}, 20)`);
+          
+          // Position tooltip near the hovered segment
+          const [mx, my] = d3.pointer(event, svg.node());
+          tip.attr('transform', `translate(${mx}, ${my - radius - tipHeight - 20})`);
+        }
+
+        tip.style('display', null);
       })
       .on('mouseleave', function () {
+        d3.select(this).attr('opacity', 0.9).attr('stroke', 'none');
+        crosshair.style('display', 'none');
+        tip.style('display', 'none');
         centerText.text('Fitness');
+      })
+      .on('mousemove', function (event) {
+        const [mx, my] = d3.pointer(event, svg.node());
+        const bbox = tipContent.node()?.getBBox();
+        if (bbox) {
+          const tipHeight = bbox.height + 40;
+          tip.attr('transform', `translate(${mx}, ${my - radius - tipHeight - 20})`);
+        }
       });
   }, [parts, height]);
 

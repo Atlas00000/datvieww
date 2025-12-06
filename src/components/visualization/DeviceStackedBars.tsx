@@ -97,30 +97,89 @@ export default function DeviceStackedBars({ height = 200 }: DeviceStackedBarsPro
       .call((s) => s.selectAll('line').attr('class', 'stroke-gray-100'))
       .call((s) => s.select('.domain').attr('class', 'stroke-gray-300'));
 
-    // Tooltip per segment
+    // Crosshair line
+    const cx = g.append('line')
+      .attr('y1', 0)
+      .attr('y2', innerH)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-opacity', 0.25)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+
+    // Enhanced tooltip with data breakdown
     const tip = g.append('g').style('display', 'none');
-    const tipBg = tip.append('rect').attr('rx', 6).attr('fill', 'white').attr('stroke', '#e5e7eb');
-    const tipText = tip.append('text').attr('class', 'text-[10px] fill-gray-800');
+    const tipBg = tip.append('rect').attr('rx', 8).attr('fill', 'white').attr('stroke', '#e5e7eb').attr('stroke-width', 1);
+    const tipTitle = tip.append('text').attr('class', 'text-sm fill-gray-900 font-bold').attr('x', 0).attr('y', 0);
+    const tipContent = tip.append('g').attr('transform', 'translate(0, 20)');
+
+    const centers = data.rows.map((d) => (x(d.region) as number) + x.bandwidth() / 2);
+    const totalByRegion = new Map(data.rows.map((d) => [d.region, (d.Desktop as number) + (d.Mobile as number) + (d.Tablet as number)]));
+
     g.selectAll('rect')
-      .on('mouseenter', () => tip.style('display', null))
-      .on('mouseleave', () => tip.style('display', 'none'))
+      .on('mouseenter', () => {
+        cx.style('display', null);
+        tip.style('display', null);
+      })
+      .on('mouseleave', () => {
+        cx.style('display', 'none');
+        tip.style('display', 'none');
+      })
       .on('mousemove', function (event: any, d: any) {
         const region = d.data.region;
         const value = Math.round(d[1] - d[0]);
-        // find series key by fill color context (approx by y range label)
-        let seriesLabel = '';
-        // parent node holds datum for stack series; retrieve if available
         const parent: any = (this as any).parentNode.__data__;
-        seriesLabel = parent?.key || '';
-        tipText.selectAll('tspan').remove();
-        tipText.append('tspan').attr('x', 0).attr('dy', 0).text(`${seriesLabel}`);
-        tipText.append('tspan').attr('x', 0).attr('dy', 12).text(`${region}: ${value}`);
-        const bbox = (tipText.node() as SVGTextElement).getBBox();
-        tipBg.attr('width', bbox.width + 16).attr('height', bbox.height + 12).attr('x', -8).attr('y', -bbox.height);
-        const [mx, my] = d3.pointer(event);
-        const tx = Math.min(innerW - (bbox.width + 20), mx + 10);
-        const ty = Math.max(12, my - 10);
-        tip.attr('transform', `translate(${tx},${ty})`);
+        const seriesLabel = parent?.key || '';
+        const cxPos = (x(region) as number) + x.bandwidth() / 2;
+        cx.attr('x1', cxPos).attr('x2', cxPos);
+
+        const regionTotal = totalByRegion.get(region) || 1;
+        const pct = (value / regionTotal) * 100;
+
+        // Update tooltip with detailed breakdown
+        tipTitle.text('Device Usage Breakdown');
+        tipContent.selectAll('*').remove();
+        
+        let yOffset = 0;
+        const breakdown = [
+          { label: 'Region', value: region },
+          { label: 'Device', value: seriesLabel, color: color(seriesLabel) },
+          { label: 'Count', value: value.toString() },
+          { label: 'Region %', value: `${pct.toFixed(1)}%` },
+        ];
+
+        breakdown.forEach((item: any) => {
+          const row = tipContent.append('g').attr('transform', `translate(0, ${yOffset})`);
+          if (item.color) {
+            row.append('rect')
+              .attr('width', 12)
+              .attr('height', 12)
+              .attr('fill', item.color)
+              .attr('rx', 2);
+          }
+          row.append('text')
+            .attr('x', item.color ? 16 : 0)
+            .attr('y', 10)
+            .attr('class', 'text-xs fill-gray-700')
+            .text(`${item.label}: ${item.value}`);
+          yOffset += 16;
+        });
+
+        const bbox = tipContent.node()?.getBBox();
+        if (bbox) {
+          const tipWidth = Math.max(bbox.width + 20, 200);
+          const tipHeight = bbox.height + 40;
+          tipBg
+            .attr('width', tipWidth)
+            .attr('height', tipHeight)
+            .attr('x', -tipWidth / 2)
+            .attr('y', -tipHeight - 10);
+          
+          tipTitle.attr('x', -tipWidth / 2 + 10).attr('y', 14);
+          tipContent.attr('transform', `translate(${-tipWidth / 2 + 10}, 20)`);
+          
+          const [mx, my] = d3.pointer(event);
+          tip.attr('transform', `translate(${Math.min(innerW - (tipWidth + 20), cxPos + 10)},${Math.max(12, my - tipHeight - 20)})`);
+        }
       });
 
     // Legend toggles

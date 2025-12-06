@@ -68,14 +68,48 @@ export default function SleepStressHeatmap({ height = 220 }: SleepStressHeatmapP
       .attr('x', -10).attr('y', (d) => (y(d) as number) + y.bandwidth() / 2 + 3)
       .attr('text-anchor', 'end').text((d) => d);
 
+    // Crosshair lines
+    const vx = g.append('line')
+      .attr('y1', 0)
+      .attr('y2', innerH)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-opacity', 0.25)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+    const vy = g.append('line')
+      .attr('x1', 0)
+      .attr('x2', innerW)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-opacity', 0.25)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+
     // Hover outline + tooltip
     const tip = g.append('g').style('display', 'none');
     const tipBg = tip.append('rect').attr('rx', 6).attr('fill', 'white').attr('stroke', '#e5e7eb');
     const tipText = tip.append('text').attr('class', 'text-[10px] fill-gray-800');
+    
     g.selectAll('rect')
-      .on('mouseenter', function () { d3.select(this).attr('stroke', 'var(--color-primary)').attr('stroke-width', 1.5); tip.style('display', null); })
-      .on('mouseleave', function () { d3.select(this).attr('stroke', 'none'); tip.style('display', 'none'); })
+      .on('mouseenter', function () {
+        d3.select(this).attr('stroke', 'var(--color-primary)').attr('stroke-width', 1.5);
+        vx.style('display', null);
+        vy.style('display', null);
+        tip.style('display', null);
+      })
+      .on('mouseleave', function () {
+        d3.select(this).attr('stroke', 'none');
+        vx.style('display', 'none');
+        vy.style('display', 'none');
+        tip.style('display', 'none');
+      })
       .on('mousemove', function (event, d: any) {
+        // Update crosshair position
+        const cellX = (x(d.x) as number) + x.bandwidth() / 2;
+        const cellY = (y(d.y) as number) + y.bandwidth() / 2;
+        vx.attr('x1', cellX).attr('x2', cellX);
+        vy.attr('y1', cellY).attr('y2', cellY);
+
+        // Update tooltip
         tipText.selectAll('tspan').remove();
         tipText.append('tspan').attr('x', 0).attr('dy', 0).text(`${d.x} × ${d.y}`);
         tipText.append('tspan').attr('x', 0).attr('dy', 12).text(`Count: ${d.v}`);

@@ -104,6 +104,104 @@ export default function IncomeHistogramViolin({ height = 160 }: IncomeChartProps
       .call((s) => s.selectAll('text').attr('class', 'text-xs fill-gray-600'))
       .call((s) => s.selectAll('line').attr('class', 'stroke-gray-100'))
       .call((s) => s.select('.domain').attr('class', 'stroke-gray-300'));
+
+    // Crosshair line
+    const vx = g.append('line')
+      .attr('y1', 0)
+      .attr('y2', innerH)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-opacity', 0.25)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+
+    // Enhanced tooltip with data breakdown
+    const tip = g.append('g').style('display', 'none');
+    const tipBg = tip.append('rect').attr('rx', 8).attr('fill', 'white').attr('stroke', '#e5e7eb').attr('stroke-width', 1);
+    const tipTitle = tip.append('text').attr('class', 'text-sm fill-gray-900 font-bold').attr('x', 0).attr('y', 0);
+    const tipContent = tip.append('g').attr('transform', 'translate(0, 20)');
+
+    const total = incomes.length;
+    const incomeBreakdown = [
+      { label: 'Low', value: 1, count: incomes.filter((i) => i === 1).length },
+      { label: 'Medium', value: 2, count: incomes.filter((i) => i === 2).length },
+      { label: 'High', value: 3, count: incomes.filter((i) => i === 3).length },
+    ].map((item) => ({
+      ...item,
+      percentage: (item.count / total) * 100,
+    }));
+
+    g.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', innerW)
+      .attr('height', innerH)
+      .attr('fill', 'transparent')
+      .on('mouseenter', () => {
+        vx.style('display', null);
+        tip.style('display', null);
+      })
+      .on('mouseleave', () => {
+        vx.style('display', 'none');
+        tip.style('display', 'none');
+      })
+      .on('mousemove', (event) => {
+        const [mx] = d3.pointer(event);
+        vx.attr('x1', mx).attr('x2', mx);
+
+        // Find nearest bin
+        const xVal = x.invert(mx);
+        const nearestBin = bins.reduce((prev, curr) => {
+          const prevDist = Math.abs(xVal - ((prev.x0 as number) + (prev.x1 as number)) / 2);
+          const currDist = Math.abs(xVal - ((curr.x0 as number) + (curr.x1 as number)) / 2);
+          return currDist < prevDist ? curr : prev;
+        });
+
+        // Update tooltip with detailed breakdown
+        tipTitle.text('Income Distribution Breakdown');
+        tipContent.selectAll('*').remove();
+        
+        let yOffset = 0;
+        incomeBreakdown.forEach((item, idx) => {
+          const row = tipContent.append('g').attr('transform', `translate(0, ${yOffset})`);
+          row.append('rect')
+            .attr('width', 12)
+            .attr('height', 12)
+            .attr('fill', idx === 0 ? '#fca5a5' : idx === 1 ? '#fde047' : '#86efac')
+            .attr('rx', 2);
+          row.append('text')
+            .attr('x', 16)
+            .attr('y', 10)
+            .attr('class', 'text-xs fill-gray-700')
+            .text(`${item.label}: ${item.count} (${item.percentage.toFixed(1)}%)`);
+          yOffset += 16;
+        });
+
+        // Add current bin info
+        const binLabel = nearestBin.x0 === 0.5 ? 'Low' : nearestBin.x0 === 1.5 ? 'Medium' : 'High';
+        const binPct = ((nearestBin.length / total) * 100).toFixed(1);
+        tipContent.append('g').attr('transform', `translate(0, ${yOffset + 8})`)
+          .append('text')
+          .attr('x', 0)
+          .attr('y', 10)
+          .attr('class', 'text-xs fill-gray-900 font-semibold')
+          .text(`Bin ${binLabel}: ${nearestBin.length} (${binPct}%)`);
+
+        const bbox = tipContent.node()?.getBBox();
+        if (bbox) {
+          const tipWidth = Math.max(bbox.width + 20, 220);
+          const tipHeight = bbox.height + 40;
+          tipBg
+            .attr('width', tipWidth)
+            .attr('height', tipHeight)
+            .attr('x', -tipWidth / 2)
+            .attr('y', -tipHeight - 10);
+          
+          tipTitle.attr('x', -tipWidth / 2 + 10).attr('y', 14);
+          tipContent.attr('transform', `translate(${-tipWidth / 2 + 10}, 20)`);
+          
+          tip.attr('transform', `translate(${Math.min(innerW - (tipWidth + 20), mx + 10)},${Math.max(12, innerH / 2 - tipHeight / 2)})`);
+        }
+      });
   }, [incomes, height]);
 
   return <svg ref={ref} className="w-full" height={height} />;

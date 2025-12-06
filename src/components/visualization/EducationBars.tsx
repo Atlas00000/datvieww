@@ -76,6 +76,72 @@ export default function EducationBars({ height = 160 }: EducationBarsProps) {
       .call((s) => s.selectAll('text').attr('class', 'text-xs fill-gray-700'))
       .call((s) => s.selectAll('line').attr('class', 'stroke-gray-200'))
       .call((s) => s.select('.domain').attr('class', 'stroke-gray-300'));
+
+    // Crosshair line (horizontal for horizontal bars)
+    const hy = g.append('line')
+      .attr('x1', 0)
+      .attr('x2', innerW)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-opacity', 0.25)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+
+    // Enhanced tooltip with data breakdown
+    const tip = g.append('g').style('display', 'none');
+    const tipBg = tip.append('rect').attr('rx', 8).attr('fill', 'white').attr('stroke', '#e5e7eb').attr('stroke-width', 1);
+    const tipTitle = tip.append('text').attr('class', 'text-sm fill-gray-900 font-bold').attr('x', 0).attr('y', 0);
+    const tipContent = tip.append('g').attr('transform', 'translate(0, 20)');
+
+    const total = d3.sum(data, (d) => d.value) || 1;
+
+    g.selectAll('rect')
+      .on('mouseenter', () => {
+        hy.style('display', null);
+        tip.style('display', null);
+      })
+      .on('mouseleave', () => {
+        hy.style('display', 'none');
+        tip.style('display', 'none');
+      })
+      .on('mousemove', function (event, d: any) {
+        const hyPos = (y(d.education) as number) + y.bandwidth() / 2;
+        hy.attr('y1', hyPos).attr('y2', hyPos);
+
+        const pct = (d.value / total) * 100;
+
+        // Update tooltip with detailed breakdown
+        tipTitle.text('Education Level Distribution');
+        tipContent.selectAll('*').remove();
+        
+        let yOffset = 0;
+        data.forEach((item) => {
+          const itemPct = (item.value / total) * 100;
+          const row = tipContent.append('g').attr('transform', `translate(0, ${yOffset})`);
+          row.append('text')
+            .attr('x', 0)
+            .attr('y', 10)
+            .attr('class', 'text-xs fill-gray-700')
+            .text(`${item.education}: ${item.value} (${itemPct.toFixed(1)}%)`);
+          yOffset += 16;
+        });
+
+        const bbox = tipContent.node()?.getBBox();
+        if (bbox) {
+          const tipWidth = Math.max(bbox.width + 20, 220);
+          const tipHeight = bbox.height + 40;
+          tipBg
+            .attr('width', tipWidth)
+            .attr('height', tipHeight)
+            .attr('x', -tipWidth / 2)
+            .attr('y', -tipHeight - 10);
+          
+          tipTitle.attr('x', -tipWidth / 2 + 10).attr('y', 14);
+          tipContent.attr('transform', `translate(${-tipWidth / 2 + 10}, 20)`);
+          
+          const [mx, my] = d3.pointer(event);
+          tip.attr('transform', `translate(${Math.min(innerW - (tipWidth + 20), mx + 10)},${Math.max(12, my - tipHeight - 20)})`);
+        }
+      });
   }, [data, height]);
 
   return <svg ref={ref} className="w-full" height={height} />;

@@ -91,25 +91,97 @@ export default function ShoppingSunburst({ height = 260 }: ShoppingSunburstProps
       .attr('text-anchor', 'middle')
       .text((d) => d.data.name);
 
-    // Tooltip
-    const tip = svg.append('g');
-    tip.style('display', 'none');
-    const tipBg = tip.append('rect').attr('rx', 6).attr('fill', 'white').attr('stroke', '#e5e7eb');
-    const tipText = tip.append('text').attr('class', 'text-[10px] fill-gray-800');
+    // Enhanced tooltip with data breakdown
+    const tip = svg.append('g').style('display', 'none');
+    const tipBg = tip.append('rect').attr('rx', 8).attr('fill', 'white').attr('stroke', '#e5e7eb').attr('stroke-width', 1);
+    const tipTitle = tip.append('text').attr('class', 'text-sm fill-gray-900 font-bold').attr('x', 0).attr('y', 0);
+    const tipContent = tip.append('g').attr('transform', 'translate(0, 20)');
+
+    // Crosshair indicator (radial line from center)
+    const crosshair = svg.append('line')
+      .attr('x1', 0)
+      .attr('y1', 0)
+      .attr('x2', 0)
+      .attr('y2', -radius)
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-width', 2)
+      .attr('stroke-opacity', 0.6)
+      .attr('stroke-dasharray', '4,4')
+      .style('display', 'none');
+
+    // Calculate total for percentage breakdown
+    const total = root.value || 1;
 
     svg.selectAll('path')
-      .on('mouseenter', () => tip.style('display', null))
-      .on('mouseleave', () => tip.style('display', 'none'))
+      .on('mouseenter', function (event: any, d: any) {
+        d3.select(this).attr('stroke', 'var(--color-primary)').attr('stroke-width', 2);
+        
+        // Show crosshair
+        const angle = ((d.x0 + d.x1) / 2);
+        const midRadius = (d.y0 + d.y1) / 2;
+        crosshair
+          .attr('x2', Math.cos(angle - Math.PI / 2) * midRadius)
+          .attr('y2', Math.sin(angle - Math.PI / 2) * midRadius)
+          .style('display', null);
+        
+        tip.style('display', null);
+      })
+      .on('mouseleave', function () {
+        d3.select(this).attr('stroke', 'white').attr('stroke-width', 0);
+        crosshair.style('display', 'none');
+        tip.style('display', 'none');
+      })
       .on('mousemove', function (event: any, d: any) {
-        const label = d.depth === 1 ? d.data.name : `${d.parent?.data.name} → ${d.data.name}`;
-        const value = d.value;
-        tipText.selectAll('tspan').remove();
-        tipText.append('tspan').attr('x', 0).attr('dy', 0).text(label);
-        tipText.append('tspan').attr('x', 0).attr('dy', 12).text(`Count: ${value}`);
-        const bbox = (tipText.node() as SVGTextElement).getBBox();
-        tipBg.attr('width', bbox.width + 16).attr('height', bbox.height + 12).attr('x', -8).attr('y', -bbox.height);
-        const [mx, my] = d3.pointer(event, svg.node() as any);
-        tip.attr('transform', `translate(${mx + 10 - width / 2},${my - height / 2})`);
+        const channel = d.depth === 1 ? d.data.name : d.parent?.data.name || 'Unknown';
+        const region = d.depth === 2 ? d.data.name : '';
+        const value = d.value || 0;
+        const pct = (value / total) * 100;
+
+        // Update tooltip with detailed breakdown
+        tipTitle.text('Shopping Channel Distribution');
+        tipContent.selectAll('*').remove();
+        
+        let yOffset = 0;
+        const breakdown = [
+          { label: 'Channel', value: channel, color: color(channel) },
+          ...(region ? [{ label: 'Region', value: region }] : []),
+          { label: 'Count', value: value.toString() },
+          { label: 'Percentage', value: `${pct.toFixed(1)}%` },
+        ];
+
+        breakdown.forEach((item: any) => {
+          const row = tipContent.append('g').attr('transform', `translate(0, ${yOffset})`);
+          if (item.color) {
+            row.append('rect')
+              .attr('width', 12)
+              .attr('height', 12)
+              .attr('fill', item.color)
+              .attr('rx', 2);
+          }
+          row.append('text')
+            .attr('x', item.color ? 16 : 0)
+            .attr('y', 10)
+            .attr('class', 'text-xs fill-gray-700')
+            .text(`${item.label}: ${item.value}`);
+          yOffset += 16;
+        });
+
+        const bbox = tipContent.node()?.getBBox();
+        if (bbox) {
+          const tipWidth = Math.max(bbox.width + 20, 200);
+          const tipHeight = bbox.height + 40;
+          tipBg
+            .attr('width', tipWidth)
+            .attr('height', tipHeight)
+            .attr('x', -tipWidth / 2)
+            .attr('y', -tipHeight - 10);
+          
+          tipTitle.attr('x', -tipWidth / 2 + 10).attr('y', 14);
+          tipContent.attr('transform', `translate(${-tipWidth / 2 + 10}, 20)`);
+          
+          const [mx, my] = d3.pointer(event, svg.node() as any);
+          tip.attr('transform', `translate(${mx + 10 - width / 2},${my - height / 2 - tipHeight - 20})`);
+        }
       });
   }, [rootData, height]);
 

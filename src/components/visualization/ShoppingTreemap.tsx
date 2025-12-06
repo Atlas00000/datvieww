@@ -77,24 +77,90 @@ export default function ShoppingTreemap({ height = 240 }: ShoppingTreemapProps) 
       .duration(500)
       .attr('opacity', 1);
 
-    // Tooltip on hover (channel → region)
+    // Enhanced tooltip with data breakdown
     const tip = svg.append('g').style('display', 'none');
-    const tipBg = tip.append('rect').attr('rx', 6).attr('fill', 'white').attr('stroke', '#e5e7eb');
-    const tipText = tip.append('text').attr('class', 'text-[10px] fill-gray-800');
+    const tipBg = tip.append('rect').attr('rx', 8).attr('fill', 'white').attr('stroke', '#e5e7eb').attr('stroke-width', 1);
+    const tipTitle = tip.append('text').attr('class', 'text-sm fill-gray-900 font-bold').attr('x', 0).attr('y', 0);
+    const tipContent = tip.append('g').attr('transform', 'translate(0, 20)');
 
-    nodes.on('mouseenter', () => tip.style('display', null))
-      .on('mouseleave', () => tip.style('display', 'none'))
+    // Calculate total for percentage breakdown
+    const total = d3.sum(root.leaves(), (d: any) => d.value || 0) || 1;
+    const channelTotals = new Map<string, number>();
+    root.leaves().forEach((d: any) => {
+      const channel = d.parent?.data.name || 'Unknown';
+      channelTotals.set(channel, (channelTotals.get(channel) || 0) + (d.value || 0));
+    });
+
+    nodes.on('mouseenter', function (event, d: any) {
+        // Highlight the hovered cell
+        d3.select(this).select('rect')
+          .attr('stroke', 'var(--color-primary)')
+          .attr('stroke-width', 2)
+          .attr('stroke-opacity', 0.8);
+        
+        tip.style('display', null);
+      })
+      .on('mouseleave', function () {
+        d3.select(this).select('rect')
+          .attr('stroke', 'var(--color-primary)')
+          .attr('stroke-width', 0)
+          .attr('stroke-opacity', 0.06);
+        tip.style('display', 'none');
+      })
       .on('mousemove', function (event, d: any) {
-        const channel = d.parent?.data.name;
+        const channel = d.parent?.data.name || 'Unknown';
         const region = d.data.name;
-        const value = d.data.value;
-        tipText.selectAll('tspan').remove();
-        tipText.append('tspan').attr('x', 0).attr('dy', 0).text(`${channel}`);
-        tipText.append('tspan').attr('x', 0).attr('dy', 12).text(`${region}: ${value}`);
-        const bbox = (tipText.node() as SVGTextElement).getBBox();
-        tipBg.attr('width', bbox.width + 16).attr('height', bbox.height + 12).attr('x', -8).attr('y', -bbox.height);
-        const [mx, my] = d3.pointer(event, svg.node() as any);
-        tip.attr('transform', `translate(${mx + 10 - width / 2},${my - height / 2})`);
+        const value = d.data.value || 0;
+        const channelTotal = channelTotals.get(channel) || 1;
+        const regionPct = (value / channelTotal) * 100;
+        const overallPct = (value / total) * 100;
+
+        // Update tooltip with detailed breakdown
+        tipTitle.text('Shopping Channel Breakdown');
+        tipContent.selectAll('*').remove();
+        
+        let yOffset = 0;
+        const breakdown = [
+          { label: 'Channel', value: channel, color: color(channel) },
+          { label: 'Region', value: region },
+          { label: 'Count', value: value.toString() },
+          { label: 'Channel %', value: `${regionPct.toFixed(1)}%` },
+          { label: 'Overall %', value: `${overallPct.toFixed(1)}%` },
+        ];
+
+        breakdown.forEach((item, idx) => {
+          const row = tipContent.append('g').attr('transform', `translate(0, ${yOffset})`);
+          if (item.color) {
+            row.append('rect')
+              .attr('width', 12)
+              .attr('height', 12)
+              .attr('fill', item.color)
+              .attr('rx', 2);
+          }
+          row.append('text')
+            .attr('x', item.color ? 16 : 0)
+            .attr('y', 10)
+            .attr('class', 'text-xs fill-gray-700')
+            .text(`${item.label}: ${item.value}`);
+          yOffset += 16;
+        });
+
+        const bbox = tipContent.node()?.getBBox();
+        if (bbox) {
+          const tipWidth = Math.max(bbox.width + 20, 200);
+          const tipHeight = bbox.height + 40;
+          tipBg
+            .attr('width', tipWidth)
+            .attr('height', tipHeight)
+            .attr('x', -tipWidth / 2)
+            .attr('y', -tipHeight - 10);
+          
+          tipTitle.attr('x', -tipWidth / 2 + 10).attr('y', 14);
+          tipContent.attr('transform', `translate(${-tipWidth / 2 + 10}, 20)`);
+          
+          const [mx, my] = d3.pointer(event, svg.node() as any);
+          tip.attr('transform', `translate(${mx + 10 - width / 2},${my - height / 2 - tipHeight - 20})`);
+        }
       });
   }, [rootData, height]);
 
